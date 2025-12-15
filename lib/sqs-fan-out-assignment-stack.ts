@@ -15,8 +15,8 @@ export class SqsFanOutAssignmentStack extends cdk.Stack {
     //Input Bucket
     const inputBucket = new s3.Bucket(this, 'InputBucket', {
       bucketName: `image-input-bucket-${cdk.Aws.ACCOUNT_ID}`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // Delete bucket when stack is destroyed (dev only!)
-      autoDeleteObjects: true, // Delete objects when bucket is destroyed (dev only!)
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true, 
       encryption: s3.BucketEncryption.S3_MANAGED,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       versioned: false,
@@ -41,7 +41,7 @@ export class SqsFanOutAssignmentStack extends cdk.Stack {
     //SQS Queue
     const imageQueue = new sqs.Queue(this, 'ImageProcessingQueue', {
       queueName: 'image-processing-queue',
-      visibilityTimeout: cdk.Duration.seconds(300), // Must be >= Lambda timeout
+      visibilityTimeout: cdk.Duration.seconds(300), 
       retentionPeriod: cdk.Duration.days(4),
     });
 
@@ -75,10 +75,10 @@ export class SqsFanOutAssignmentStack extends cdk.Stack {
     const imageProcessorFunction = new lambda.Function(this, 'ImageProcessorFunction', {
       functionName: 'image-processor',
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'lambda_function.lambda_handler', // file.function
-      code: lambda.Code.fromAsset('lambda'), // Folder with lambda_function.py and python/
-      timeout: cdk.Duration.seconds(300), // 5 minutes max
-      memorySize: 512, // MB - increase if processing large images
+      handler: 'lambda_function.lambda_handler', 
+      code: lambda.Code.fromAsset('lambda'), 
+      timeout: cdk.Duration.seconds(300), 
+      memorySize: 512, 
       environment: {
         INPUT_BUCKET: inputBucket.bucketName,
         OUTPUT_BUCKET: outputBucket.bucketName,
@@ -105,9 +105,9 @@ export class SqsFanOutAssignmentStack extends cdk.Stack {
     //SQS Trigger Lambda
     imageProcessorFunction.addEventSource(
       new lambdaEventSources.SqsEventSource(imageQueue, {
-        batchSize: 10, // Process up to 10 messages at once
-        maxBatchingWindow: cdk.Duration.seconds(5), // Wait up to 5 seconds to fill batch
-        reportBatchItemFailures: true, // Only delete successfully processed messages
+        batchSize: 10, 
+        maxBatchingWindow: cdk.Duration.seconds(5), 
+        reportBatchItemFailures: true, 
       })
     );
 
